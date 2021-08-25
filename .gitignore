@@ -1,3 +1,6 @@
+# VSCode config folder
+.vscode/
+
 # Deep learning model files
 *.pt
 *.caffemodel
