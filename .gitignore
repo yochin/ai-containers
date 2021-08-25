@@ -1,3 +1,12 @@
+# Deep learning model files
+*.pt
+*.caffemodel
+
+# ROS2 build folders
+build/
+install/
+log/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
