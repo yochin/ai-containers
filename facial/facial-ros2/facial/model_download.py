@@ -25,7 +25,7 @@ class FacialModelDownloadNode(Node):
     def __init__(self):
         super().__init__('facial_model_download')
 
-        path = "./facial_ros2/models"
+        path = "./facial-ros2/models"
         weightsPath = os.path.sep.join(
             [path, "Resnet50_Final.pth"])
         self.face_detector = RetinaFaceDetector(weightsPath, cpu=True)

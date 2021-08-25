@@ -82,7 +82,11 @@ RUN apt-get update && apt-get install -y python3-opencv
 RUN pip3 install opencv-python
 
 COPY ./aai4r_edge_interfaces/ /aai4r/aai4r_edge_interfaces/
-COPY ./facial_ros2 /aai4r/facial_ros2/
+COPY ./facial-ros2 /aai4r/facial-ros2/
+
+WORKDIR /aai4r/facial-ros2/models
+RUN /aai4r/facial-ros2/models/model_download.sh
+
 WORKDIR /aai4r
 RUN sudo rm -rf install build log
 

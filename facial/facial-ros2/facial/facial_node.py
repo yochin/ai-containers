@@ -24,7 +24,7 @@ class FaceMaskDetector(object):
     def __init__(self, logger) -> None:
         super().__init__()
 
-        path = "./facial_ros2/models"
+        path = "./facial-ros2/models"
         weightsPath = os.path.sep.join(
             [path, "Resnet50_Final.pth"])
         self.face_detector = RetinaFaceDetector(weightsPath)
