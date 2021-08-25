@@ -2,8 +2,11 @@
 .vscode/
 
 # Deep learning model files
+*.pth
 *.pt
 *.caffemodel
+*.model
+*.prototxt
 
 # ROS2 build folders
 build/
