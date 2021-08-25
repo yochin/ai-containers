@@ -1,1 +1,0 @@
-docker run --gpus all --name aai4r_foods --rm -it -p 6080:6080 -p 2431:2431 -v ${PWD}/workdir:/home/user/workspace aai4r/foods
