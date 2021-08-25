@@ -1,0 +1,11 @@
+{
+    "ros.distro": "foxy",
+    "python.autoComplete.extraPaths": [
+        "/data/kobaia/Developments/cloudrobots/ai-containers/detrack/install/detrack/lib/python3.8/site-packages",
+        "/opt/ros/foxy/lib/python3.8/site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/data/kobaia/Developments/cloudrobots/ai-containers/detrack/install/detrack/lib/python3.8/site-packages",
+        "/opt/ros/foxy/lib/python3.8/site-packages"
+    ]
+}
