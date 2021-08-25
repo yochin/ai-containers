@@ -7,6 +7,8 @@
 *.caffemodel
 *.model
 *.prototxt
+*.pkl
+*.tar
 
 # ROS2 build folders
 build/
