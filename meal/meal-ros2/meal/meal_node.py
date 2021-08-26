@@ -30,7 +30,7 @@ class MealNode(Node):
 
         self.publisher_ = self.create_publisher(String, '/aai4r/meal', 10)
 
-        self.visualize_flag = True
+        self.visualize_flag = False
 
         self.monitor_publisher = self.create_publisher(Image, '/aai4r/meal/monitor', 1)
         self.cv_bridge = CvBridge()
@@ -59,14 +59,20 @@ class MealNode(Node):
 
         # TODO: detect or recognize something
 
-        msg_data = {"timestamp":(stamp.sec,stamp.nanosec), "facial": []}
-        for (box, pred) in zip(face_locs, mask_dets):
-            # print("FACE: ", box, " / MASK: ",
-            #      "ON" if pred[0] > pred[1] else "OFF")
-            msg_data["facial"].append(
-                {"box": (int(box[0]), int(box[1]), int(box[2]), int(box[3])),
-                "mask": bool(pred[0] > pred[1])})
-        #self.get_logger().info(json.dumps(msg_data))
+        # meal context for an agent(robot)
+        msg_data = {"agent_id": agent_id, "timestamp":(stamp.sec,stamp.nanosec), "meal": []}
+        
+        # sample
+        detection_data = [
+            { 'category': 'food', 'bbox': (100,100,200,200), 'amount': 0.9},
+            { 'category': 'drink', 'bbox': (50,50,200,200), 'amount': 0.2}
+        ]
+
+        msg_data['meal'] = detection_data
+
+        # publish message
+        self.get_logger().info(json.dumps(msg_data))
+
         pub_msg = String()
         pub_msg.data = json.dumps(msg_data)
         self.publisher_.publish(pub_msg)
