@@ -1,6 +1,7 @@
 import sys
 import json
 import numpy as np
+import uuid
 
 import rclpy
 from rclpy.node import Node
@@ -42,6 +43,10 @@ class MealNode(Node):
 
     def visualize(self, frame, meal_dets):
         return frame
+
+
+    def get_uuid(self):
+        return str(uuid.uuid4())
 
 
     def callback(self, msg):

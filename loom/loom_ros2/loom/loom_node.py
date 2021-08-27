@@ -3,6 +3,7 @@ import json
 import time
 import cv2
 import numpy as np
+import uuid
 
 import rclpy
 from rclpy.node import Node
@@ -51,6 +52,14 @@ class WorkingMemory(object):
             return None
         return self.memory[subject][property]
 
+    def forget_chunk(self, cue):
+        to_be_removed = []
+        for subject in self.memory.keys():
+            if 'related-to' in self.memory[subject] and self.memory[subject]['related-to'] == cue:
+                to_be_removed.append(subject)
+        for subject in to_be_removed:
+            del self.memory[subject]
+
 
 class CognitiveTimeline(object):
     def __init__(self) -> None:
@@ -70,8 +79,13 @@ class LoomNode(Node):
 
         self.timeline = CognitiveTimeline()
 
-        self.wm = WorkingMemory()
-        self.wm_lock = threading.Lock()
+        self.agents = []
+        self.agents_lock = threading.Lock()
+        self.wms = {}
+        self.wms_lock = {}
+
+        #self.wm = WorkingMemory()
+        #self.wm_lock = threading.Lock()
 
         self.img_info = None
         self.img_info_lock = threading.Lock()
@@ -125,9 +139,23 @@ class LoomNode(Node):
         self.time_video_recording_started = None
         self.create_timer(1.0/self.fps, self.video_recording_callback)
 
+
+    def add_agent(self, agent_id):
+        if agent_id not in self.agents:
+            self.agents.append(agent_id)
+
+
+    def get_wm(self, agent_id):
+        if agent_id in self.wms:
+            return self.wms[agent_id], self.wms_locks[agent_id]
+        else:
+            return None, None
+
+
     def publish_img(self, img):
         self.monitor_publisher.publish(
             self.cv_bridge.cv2_to_imgmsg(img, "bgr8"))
+
 
     def detrack_callback(self, msg):
         msg_data = json.loads(msg.data)
@@ -135,6 +163,7 @@ class LoomNode(Node):
             for track in msg_data['tracks']:
                 self.wm.put(track['track_id'], 'roi', track['pos'])
                 self.wm.put(track['track_id'], 'score', track['score'])
+
 
     def facial_callback(self, msg):
         msg_data = json.loads(msg.data)
@@ -150,6 +179,7 @@ class LoomNode(Node):
             else:
                 self.wm.put('robot', 'face_detected', 'no')
 
+
     def hhobjects_callback(self, msg):
         msg_data = json.loads(msg.data)
         with self.wm_lock:
@@ -162,12 +192,24 @@ class LoomNode(Node):
                     self.wm.put(track_id, 'cup_roi', object[0])
                     self.wm.put(track_id, 'has_cup', True)
 
+
     def image_info_callback(self, msg):
         #stamp = msg.stamp
         #now = self.get_clock().now().to_msg()
         #nano_diff = stamp.nanosec - now.nanosec
         # if abs(nano_diff) > 30000000:
         #    return
+        self.add_agent(msg.agent_id)
+        wm, lock = self.get_wm(msg.agent_id)
+
+        if wm is None:
+            return
+
+        with lock:
+            wm.put('robot', 'robot_id', msg.agent_id)
+            wm.put('robot', 'distance', msg.distance)
+            wm.put('robot', 'zone', msg.zone)
+
         np_arr = np.frombuffer(msg.data, np.uint8)
         im = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
@@ -194,15 +236,38 @@ class LoomNode(Node):
             imp = draw_labeled_boxes(im, results)
             self.publish_img(imp)
 
+
+    def get_uuid(self):
+        return str(uuid.uuid4())
+
+
     def meal_callback(self, msg):
         msg_data = json.loads(msg.data)
-        # TODO: implement...
+        
+        # get a world model for the current agent
+        agent_id = msg_data['agent_id']
+        wm, lock = self.get_wm(agent_id)
+
+        if wm is None:
+            return
+
+        with lock:
+            wm.forget_chunk('meal-context')
+            for object in msg_data['meal']:
+                # object = [{'category': 'food', 'name': 'pasta', 'bbox': (100,100,200,200), 'amount': 0.9}]
+                obj_id = self.get_uuid()
+                wm.put(obj_id, 'related-to', 'meal-context')
+                wm.put(obj_id, 'category', object['category'])
+                wm.put(obj_id, 'name', object['name'])
+                wm.put(obj_id, 'amount', object['amount'])
+
 
     def get_box(self, track):
         if 'roi' in track:
             return track['roi']
         else:
             return None
+
 
     def calc_iou(self, track_roi, face_roi):
         # determine the (x, y)-coordinates of the intersection rectangle
@@ -222,6 +287,7 @@ class LoomNode(Node):
         # return the intersection over union value
         return containment
 
+
     def predict_track_id(self, face_roi):
         for key in self.wm.memory.keys():
             track = self.wm.memory[key]
@@ -232,53 +298,48 @@ class LoomNode(Node):
                 self.get_logger().debug("IOU: %f" % self.calc_iou(track_box, face_roi))
                 return key
 
-    def generate_situation_msg(self, wm):
-        situation = {
-            'domain': 1,
-            'robot_id': 'robot01',
-            'robot_type': 1,
-            'time': datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-            'zone': 0,
-            'distance': -1,
-            'situation': {},
-            'group': {},
-            'personal_context': []
-        }
+    def generate_situation_msg(self, wms):
+        situations = []
+        
+        for agent_id in wms.keys():
+            wm = wms[agent_id]
+            situation = {
+                'domain': 1,
+                'robot_id': agent_id,
+                'robot_type': 1,
+                'time': datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                'zone': 0,
+                'distance': -1,
+                'situation': {},
+                'group': {},
+                'personal_context': [],
+                'meal_context': []      # [{'category':'food', 'name':'pasta', 'amount':0.2}, ...]
+            }
+            for key in wm.memory.keys():
+                track = wm.memory[key]
+                if key == 'robot':
+                    situation.update(track)
+                else:
+                    context = {}
+                    if 'related-to' in track and track['related-to'] == 'meal-context':
+                        context['category'] = track['category']
+                        context['name'] = track['name']
+                        context['amount'] = track['amount']
+                        situation['meal_context'].append(context)
+                    else:
+                        context['id'] = key
+                        if 'mask' in track:
+                            context['mask'] = 1 if track['mask'] is True else 2
+                        if 'has_cup' in track:
+                            context['has_cup'] = 1 if track['has_cup'] is True else 2                    
+                        situation['personal_context'].append(context)
+            
+            situations.append(situation)
 
-        for key in wm.memory.keys():
-            track = wm.memory[key]
-            if key == 'robot':
-                situation.update(track)
-            else:
-                context = {}
-                context['id'] = key
-                if 'mask' in track:
-                    context['mask'] = 1 if track['mask'] is True else 2
-                if 'has_cup' in track:
-                    context['has_cup'] = 1 if track['has_cup'] is True else 2
-                situation['personal_context'].append(context)
-
-        '''
-        string agent_id	# ex) hancom_qi_1
-        string format		# jpeg
-        string hash		# image hash
-        uint64 seq_id		# tick count
-        uint16 height		# 640
-        uint16 width		# 480
-        float32 distance	# Meter
-        uint8 zone		# 1.Entrance 2.Lobby 3.table
-        uint8[] data		# Compressed image buffer
-        '''
-        with self.img_info_lock:
-            if self.img_info is not None:
-                situation['robot_id'] = self.img_info.agent_id
-                situation['distance'] = self.img_info.distance
-                situation['zone'] = self.img_info.zone
-
-        msg = String()
-        msg.data = json.dumps(situation)
-        self.get_logger().info("SITUATION: %s" % msg.data)
-        return msg
+            msg = String()
+            msg.data = json.dumps(situation)
+            self.get_logger().info("SITUATION: %s" % msg.data)
+            return msg
 
 
     def create_video_writer(self):
@@ -319,11 +380,13 @@ class LoomNode(Node):
 
 
     def timer_callback(self):
-        with self.wm_lock:
-            wm = self.wm
-            self.timeline.add(self.wm)
-            self.wm = WorkingMemory()
-        msg = self.generate_situation_msg(wm)
+        with self.timeline_lock:
+            wms = self.wms
+            self.timeline.add(self.wms)
+            with self.agents_lock:
+                for id in self.agents:
+                    self.wms[id] = WorkingMemory()
+        msg = self.generate_situation_msg(wms)
         self.publisher_.publish(msg)
 
 
