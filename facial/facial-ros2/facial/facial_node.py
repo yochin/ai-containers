@@ -57,6 +57,8 @@ class FaceMaskDetector(object):
         # loop over the detections
         for det in dets:
             startX, startY, endX, endY, confidence = int(det[0]), int(det[1]), int(det[2]), int(det[3]), float(det[4])
+            if startX < 0 or endX < 0 or startY < 0 or endY < 0:
+                continue
             #self.logger.info('x1=%d y1=%d x2=%d y2=%d conf=%f' % (startX, startY, endX, endY, confidence))
             # filter out weak detections by ensuring the confidence is
             # greater than the minimum confidence
@@ -119,6 +121,7 @@ class FacialNode(Node):
 
 
     def callback(self, msg):
+        self.get_logger().info("callback called!")
         stamp = msg.stamp
         now = self.get_clock().now().to_msg()
         nano_diff = stamp.nanosec - now.nanosec
@@ -132,7 +135,7 @@ class FacialNode(Node):
         face_locs, mask_dets = self.face_mask_detector.detect_and_predict_mask(
             frame)
 
-        msg_data = {"timestamp":(stamp.sec,stamp.nanosec), "facial": []}
+        msg_data = {"timestamp":(stamp.sec,stamp.nanosec), "agent_id":msg.agent_id, "facial": []}
         for (box, pred) in zip(face_locs, mask_dets):
             # print("FACE: ", box, " / MASK: ",
             #      "ON" if pred[0] > pred[1] else "OFF")
@@ -142,6 +145,9 @@ class FacialNode(Node):
         #self.get_logger().info(json.dumps(msg_data))
         pub_msg = String()
         pub_msg.data = json.dumps(msg_data)
+        
+        self.get_logger().info(pub_msg.data)
+        
         self.publisher_.publish(pub_msg)
 
         if self.visualize_flag:

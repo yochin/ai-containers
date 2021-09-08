@@ -69,8 +69,8 @@ class MealNode(Node):
         
         # sample
         detection_data = [
-            { 'category': 'food', 'bbox': (100,100,200,200), 'amount': 0.9},
-            { 'category': 'drink', 'bbox': (50,50,200,200), 'amount': 0.2}
+            { 'category': 'food', 'name': 'pasta', 'bbox': (100,100,200,200), 'amount': 0.9},
+            { 'category': 'drink', 'name': 'sprite', 'bbox': (50,50,200,200), 'amount': 0.2}
         ]
 
         msg_data['meal'] = detection_data

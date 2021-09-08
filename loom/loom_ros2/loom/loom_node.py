@@ -78,17 +78,18 @@ class LoomNode(Node):
         super().__init__('loom_node')
 
         self.timeline = CognitiveTimeline()
+        self.timeline_lock = threading.Lock()
 
         self.agents = []
         self.agents_lock = threading.Lock()
         self.wms = {}
-        self.wms_lock = {}
+        self.wms_locks = {}
 
         #self.wm = WorkingMemory()
         #self.wm_lock = threading.Lock()
 
-        self.img_info = None
-        self.img_info_lock = threading.Lock()
+        # self.img_info = None
+        # self.img_info_lock = threading.Lock()
 
         self.subscription = self.create_subscription(
             String,
@@ -167,17 +168,46 @@ class LoomNode(Node):
 
     def facial_callback(self, msg):
         msg_data = json.loads(msg.data)
-        with self.wm_lock:
+
+        # get a world model for the current agent
+        agent_id = msg_data['agent_id']
+        wm, lock = self.get_wm(agent_id)
+
+        if wm is None:
+            return
+
+        with lock:
             if len(msg_data['facial']) > 0:
                 for face in msg_data['facial']:
-                    self.wm.put('robot', 'face_detected', 'yes')
+                    wm.put('robot', 'face_detected', 'yes')
                     track_id = self.predict_track_id(face['box'])
                     if track_id is None:
                         continue
-                    self.wm.put(track_id, 'mask', face['mask'])
-                    self.wm.put(track_id, 'face_roi', face['box'])
+                    wm.put(track_id, 'mask', face['mask'])
+                    wm.put(track_id, 'face_roi', face['box'])
             else:
-                self.wm.put('robot', 'face_detected', 'no')
+                wm.put('robot', 'face_detected', 'no')
+
+
+    def meal_callback(self, msg):
+        msg_data = json.loads(msg.data)
+        
+        # get a world model for the current agent
+        agent_id = msg_data['agent_id']
+        wm, lock = self.get_wm(agent_id)
+
+        if wm is None:
+            return
+
+        with lock:
+            wm.forget_chunk('meal-context')
+            for object in msg_data['meal']:
+                # object = [{'category': 'food', 'name': 'pasta', 'bbox': (100,100,200,200), 'amount': 0.9}]
+                obj_id = self.get_uuid()
+                wm.put(obj_id, 'related-to', 'meal-context')
+                wm.put(obj_id, 'category', object['category'])
+                wm.put(obj_id, 'name', object['name'])
+                wm.put(obj_id, 'amount', object['amount'])
 
 
     def hhobjects_callback(self, msg):
@@ -210,14 +240,12 @@ class LoomNode(Node):
             wm.put('robot', 'distance', msg.distance)
             wm.put('robot', 'zone', msg.zone)
 
+        '''
         np_arr = np.frombuffer(msg.data, np.uint8)
         im = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
         # put an image for processing
         self.image_q.put(im)
-
-        with self.img_info_lock:
-            self.img_info = msg
 
         if self.vizualize_flag:
             results = []
@@ -235,31 +263,11 @@ class LoomNode(Node):
 
             imp = draw_labeled_boxes(im, results)
             self.publish_img(imp)
+        '''
 
 
     def get_uuid(self):
         return str(uuid.uuid4())
-
-
-    def meal_callback(self, msg):
-        msg_data = json.loads(msg.data)
-        
-        # get a world model for the current agent
-        agent_id = msg_data['agent_id']
-        wm, lock = self.get_wm(agent_id)
-
-        if wm is None:
-            return
-
-        with lock:
-            wm.forget_chunk('meal-context')
-            for object in msg_data['meal']:
-                # object = [{'category': 'food', 'name': 'pasta', 'bbox': (100,100,200,200), 'amount': 0.9}]
-                obj_id = self.get_uuid()
-                wm.put(obj_id, 'related-to', 'meal-context')
-                wm.put(obj_id, 'category', object['category'])
-                wm.put(obj_id, 'name', object['name'])
-                wm.put(obj_id, 'amount', object['amount'])
 
 
     def get_box(self, track):
@@ -289,18 +297,19 @@ class LoomNode(Node):
 
 
     def predict_track_id(self, face_roi):
-        for key in self.wm.memory.keys():
-            track = self.wm.memory[key]
-            track_box = self.get_box(track)
-            if track_box is None:
-                return None
-            if self.calc_iou(track_box, face_roi) > 0.7:
-                self.get_logger().debug("IOU: %f" % self.calc_iou(track_box, face_roi))
-                return key
+        return '12345'
+        # for key in self.wm.memory.keys():
+        #     track = self.wm.memory[key]
+        #     track_box = self.get_box(track)
+        #     if track_box is None:
+        #         return None
+        #     if self.calc_iou(track_box, face_roi) > 0.7:
+        #         self.get_logger().debug("IOU: %f" % self.calc_iou(track_box, face_roi))
+        #         return key
 
     def generate_situation_msg(self, wms):
         situations = []
-        
+        print(wms.keys())
         for agent_id in wms.keys():
             wm = wms[agent_id]
             situation = {
@@ -336,10 +345,10 @@ class LoomNode(Node):
             
             situations.append(situation)
 
-            msg = String()
-            msg.data = json.dumps(situation)
-            self.get_logger().info("SITUATION: %s" % msg.data)
-            return msg
+        msg = String()
+        msg.data = json.dumps(situations)
+        self.get_logger().info("SITUATION: %s" % msg.data)
+        return msg
 
 
     def create_video_writer(self):
@@ -383,11 +392,14 @@ class LoomNode(Node):
         with self.timeline_lock:
             wms = self.wms
             self.timeline.add(self.wms)
+            self.wms = {}
             with self.agents_lock:
                 for id in self.agents:
                     self.wms[id] = WorkingMemory()
-        msg = self.generate_situation_msg(wms)
-        self.publisher_.publish(msg)
+                    self.wms_locks[id] = threading.Lock()
+        if len(wms) > 0:
+            msg = self.generate_situation_msg(wms)
+            self.publisher_.publish(msg)
 
 
 def main(args=None):
