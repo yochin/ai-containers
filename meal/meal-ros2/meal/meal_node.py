@@ -16,11 +16,15 @@ import os
 import cv2
 import imutils
 
+from food_detector_interface import FoodDetectionRequestHandler
+
 class MealNode(Node):
     def __init__(self):
         super().__init__('meal_node')
 
-        self.meal_detector = None
+        # Prepare a food detector
+        model_path = '/aai4r/aai4r-ServiceContextUnderstanding/output'
+        self.meal_detector = FoodDetectionRequestHandler(model_path)
 
         self.subscription = self.create_subscription(
             RobotImageInfo,
@@ -31,7 +35,7 @@ class MealNode(Node):
 
         self.publisher_ = self.create_publisher(String, '/aai4r/meal', 10)
 
-        self.visualize_flag = False
+        self.visualize_flag = True
 
         self.monitor_publisher = self.create_publisher(Image, '/aai4r/meal/monitor', 1)
         self.cv_bridge = CvBridge()
@@ -50,6 +54,7 @@ class MealNode(Node):
 
 
     def callback(self, msg):
+        print('callback!')
         stamp = msg.stamp
         now = self.get_clock().now().to_msg()
         nano_diff = stamp.nanosec - now.nanosec
@@ -62,18 +67,19 @@ class MealNode(Node):
 
         #frame = imutils.resize(im, width=400)
 
-        # TODO: detect or recognize something
-
+        results, vis_img = self.meal_detector.process_inference_request(frame)
+        
         # meal context for an agent(robot)
         msg_data = {"agent_id": agent_id, "timestamp":(stamp.sec,stamp.nanosec), "meal": []}
-        
-        # sample
-        detection_data = [
-            { 'category': 'food', 'name': 'pasta', 'bbox': (100,100,200,200), 'amount': 0.9},
-            { 'category': 'drink', 'name': 'sprite', 'bbox': (50,50,200,200), 'amount': 0.2}
-        ]
 
-        msg_data['meal'] = detection_data
+        for result in results:
+            meal_context = {}
+            meal_context['category'] = result[4]
+            meal_context['name'] = result[6]
+            meal_context['bbox'] = [result[0],result[1],result[2],result[3]]
+            if len(result) >= 8:
+                meal_context['amount'] = result[7]
+            msg_data['meal'].append(meal_context)        
 
         # publish message
         self.get_logger().info(json.dumps(msg_data))
@@ -83,7 +89,7 @@ class MealNode(Node):
         self.publisher_.publish(pub_msg)
 
         if self.visualize_flag:
-            self.publish_img(self.visualize(frame, []))
+            self.publish_img(self.visualize(vis_img, []))
 
 
 def main(args=None):

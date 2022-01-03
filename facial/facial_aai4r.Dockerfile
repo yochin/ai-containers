@@ -90,6 +90,9 @@ RUN /aai4r/facial-ros2/models/model_download.sh
 WORKDIR /aai4r
 RUN sudo rm -rf install build log
 
+WORKDIR /aai4r
+RUN git clone https://github.com/zebehn/aai4r-facial.git
+
 COPY ./run_colcon.sh /aai4r
 RUN /aai4r/run_colcon.sh
 

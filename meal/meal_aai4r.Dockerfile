@@ -72,14 +72,41 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Seoul
 RUN apt-get update && apt-get install -y tzdata
 
-RUN mkdir /aai4r
-
-COPY ./requirements.txt /aai4r/requirements.txt
-RUN pip install -r /aai4r/requirements.txt
-RUN pip install imutils
+RUN pip install pretrainedmodels
+RUN pip install numpy
+RUN pip install imageio
+RUN pip install easydict
 
 RUN apt-get update && apt-get install -y python3-opencv
-RUN pip3 install opencv-python
+RUN pip install opencv-python
+
+RUN pip install imutils
+RUN sudo apt-get update
+RUN sudo apt-get install fonts-nanum
+
+RUN mkdir /aai4r
+
+WORKDIR /aai4r
+RUN git clone https://github.com/aai4r/aai4r-ServiceContextUnderstanding.git
+
+RUN export PYTHONPATH=$PYTHONPATH:/aai4r/aai4r-ServiceContextUnderstanding
+RUN export PYTHONPATH=$PYTHONPATH:/aai4r/aai4r-ServiceContextUnderstanding/lib
+
+WORKDIR /aai4r/aai4r-ServiceContextUnderstanding
+RUN mkdir output
+
+COPY ./gdrivedl.py /aai4r/aai4r-ServiceContextUnderstanding/output
+COPY ./download_models.sh /aai4r/aai4r-ServiceContextUnderstanding/output
+COPY ./download_senet.py /aai4r/aai4r-ServiceContextUnderstanding/output
+COPY ./download_senet.sh /aai4r/aai4r-ServiceContextUnderstanding/output
+
+WORKDIR /aai4r/aai4r-ServiceContextUnderstanding/output
+RUN /aai4r/aai4r-ServiceContextUnderstanding/output/download_models.sh
+
+COPY ./food_detector_interface.py /aai4r/aai4r-ServiceContextUnderstanding
+
+RUN mkdir -p /root/.cache/torch/hub/checkpoints
+RUN /aai4r/aai4r-ServiceContextUnderstanding/output/download_senet.sh
 
 COPY ./aai4r_edge_interfaces/ /aai4r/aai4r_edge_interfaces/
 COPY ./meal-ros2 /aai4r/meal-ros2/
@@ -92,12 +119,6 @@ RUN /aai4r/run_colcon.sh
 
 COPY ./run_meal.sh /aai4r
 COPY ./ros_entrypoint.sh /aai4r
-
-# COPY ./retinaface/ /aai4r/retinaface/
-# RUN export PYTHONPATH=/aai4r/retinaface:$PYTHONPATH
-
-COPY ./run_model_download.sh /aai4r
-RUN /aai4r/run_model_download.sh
 
 ENTRYPOINT ["/aai4r/ros_entrypoint.sh"]
 CMD ["/aai4r/run_meal.sh"]
