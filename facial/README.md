@@ -36,7 +36,7 @@ run_container_facial.sh
 
 ### Subscribed Topics
 
-``/camera/robot_image_info`` (``RobotImageInfo``)
+``/camera/robot_image_info`` ([RobotImageInfo](https://github.com/aai4r/ai-containers/blob/main/aai4r_edge_interfaces/msg/RobotImageInfo.msg))
 
 ### Published Topics
 
