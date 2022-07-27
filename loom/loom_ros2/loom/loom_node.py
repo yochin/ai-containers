@@ -207,7 +207,8 @@ class LoomNode(Node):
                 wm.put(obj_id, 'related-to', 'meal-context')
                 wm.put(obj_id, 'category', object['category'])
                 wm.put(obj_id, 'name', object['name'])
-                wm.put(obj_id, 'amount', object['amount'])
+                if 'amount' in object:
+                    wm.put(obj_id, 'amount', object['amount'])
 
 
     def hhobjects_callback(self, msg):
