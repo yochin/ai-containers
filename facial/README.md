@@ -47,40 +47,41 @@ This topic publishes a string which contains all the detection and recognition r
 ```json
 [
   {
-    # Identity recognition
-    'identities': [<ID>, <SCORE>],                               
-    # BBox (left,top,right,bottom)
-    'face_bbox': [<LEFT>, <TOP>, <RIGHT>, <BOTTOM>],                                         
-    # Gender: <GENDER_ID> = {Female(0), Male(1)}
-    'gender': [<GENDER_ID>, <SCORE>],                             
-    # Age: floating number representing a predicted age
-    'age': <AGE_VALUE>,                                                     
-    # Facial expression recognition: <EXPRESSION_ID> = {Neutral(0), Happy(1), Angry(2), Surprise(3), Sad(4))
-    'expression': [[<EXPRESSION_ID>, <SCORE>],...],
-    # Mask detection: <MASK> = {0: OFF, 1: ON}
-    'mask': [<MASK>, <SCORE>],                                   
+    // Identity recognition
+    "identities": [<ID>, <SCORE>],                               
+    // BBox (left,top,right,bottom)
+    "face_bbox": [<LEFT>, <TOP>, <RIGHT>, <BOTTOM>],                                         
+    // Gender: <GENDER_ID> = {Female(0), Male(1)}
+    "gender": [<GENDER_ID>, <SCORE>],                             
+    // Age: floating number representing a predicted age
+    "age": <AGE_VALUE>,                                                     
+    // Facial expression recognition: <EXPRESSION_ID> = {Neutral(0), Happy(1), Angry(2), Surprise(3), Sad(4))
+    "expression": [[<EXPRESSION_ID>, <SCORE>],...],
+    // Mask detection: <MASK> = {0: OFF, 1: ON}
+    "mask": [<MASK>, <SCORE>],                                   
 
-    # Hair Style detection: <HAIR_STYLE> = ["Straight", "Wavy", "Hair detect fail"]
-    'hair_style': <HAIR_STYLE>,                                         
-    # Hair Color detection: <HAIR_COLOR> = ["Dark", "Light", "Ambiguous"]
-    'hair_color': <HAIR_COLOR>,                                         
-    # Hair Length detection: <HAIR_LENGTH> = ["Short", "Normal", "Long", "Hair detect fail"]
-    'hair_length': <HAIR_LENGTH>,                                           
+    // Hair Style detection: <HAIR_STYLE> = ["Straight", "Wavy", "Hair detect fail"]
+    "hair_style": <HAIR_STYLE>,                                         
+    // Hair Color detection: <HAIR_COLOR> = ["Dark", "Light", "Ambiguous"]
+    "hair_color": <HAIR_COLOR>,                                         
+    // Hair Length detection: <HAIR_LENGTH> = ["Short", "Normal", "Long", "Hair detect fail"]
+    "hair_length": <HAIR_LENGTH>,                                           
 
-    # Lip Color: <LIP_COLOR> = {Brown(0), Red(1), Pink(2)}
-    'lip_color': <LIP_COLOR>,
-    # Necklace Bbox list (left,top,right,bottom)
-    'necklace': [<LEFT>, <TOP>, <RIGHT>, <BOTTOM>],                                           
-    # Nationality: <COUNTRY_CODE> = ['중국', '인도네시아', '일본', '사우디아라비아', '독일',
-    # '베트남', '미국', '이란', '호주', '태국',
-    # '러시아', '멕시코', '인도', '한국', '필리핀']
-    'nationality': <COUNTRY_CODE>,
+    // Lip Color: <LIP_COLOR> = {Brown(0), Red(1), Pink(2)}
+    "lip_color": <LIP_COLOR>,
+    // Necklace Bbox list (left,top,right,bottom)
+    "necklace": [<LEFT>, <TOP>, <RIGHT>, <BOTTOM>],                                           
+    // Nationality: <COUNTRY_CODE> = ["중국", "인도네시아", "일본", "사우디아라비아", "독일",
+    // "베트남", "미국", "이란", "호주", "태국",
+    // "러시아", "멕시코", "인도", "한국", "필리핀"]
+    "nationality": <COUNTRY_CODE>,
 
-    # Earring BBox list (left,top,right,bottom)
-    'earring': [[<LEFT>, <TOP>, <RIGHT>, <BOTTOM>],[<LEFT>, <TOP>, <RIGHT>, <BOTTOM>], ...],                   
-    # Skin Color detection: <COLOR_ID> = {Yellow(0), Black(1), White(2)}
-    'skin_color': <COLOR_ID>,                                                     
-  }
+    // Earring BBox list (left,top,right,bottom)
+    "earring": [[<LEFT>, <TOP>, <RIGHT>, <BOTTOM>],[<LEFT>, <TOP>, <RIGHT>, <BOTTOM>], ...],                   
+    // Skin Color detection: <COLOR_ID> = {Yellow(0), Black(1), White(2)}
+    "skin_color": <COLOR_ID>,                                                     
+  },
+  ...
 ]
 
 ```
