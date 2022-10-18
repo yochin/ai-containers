@@ -54,7 +54,7 @@ class MealNode(Node):
 
 
     def callback(self, msg):
-        print('callback!')
+        self.get_logger().info("meal_node callback!")
         stamp = msg.stamp
         now = self.get_clock().now().to_msg()
         nano_diff = stamp.nanosec - now.nanosec

@@ -1,1 +1,0 @@
-docker run --gpus all --name aai4r_facial --rm -it aai4r/facial
