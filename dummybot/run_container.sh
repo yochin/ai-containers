@@ -1,0 +1,1 @@
+docker run --gpus all --name aai4r_dummybot --device /dev/video0 --rm -it aai4r/dummybot
