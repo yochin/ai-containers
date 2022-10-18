@@ -9,6 +9,7 @@
 *.prototxt
 *.pkl
 *.tar
+*.bin
 
 # ROS2 build folders
 build/
