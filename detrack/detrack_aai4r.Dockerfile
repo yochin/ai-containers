@@ -1,6 +1,17 @@
 FROM nvidia/cuda:11.0-devel-ubuntu20.04 as torch_base
 # ubuntu version 20.04
 
+#RUN apt-get update && apt-get upgrade
+#RUN apt-key del 7fa2af80
+#RUN curl -L -O https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-keyring_1.0-1_all.deb
+#RUN dpkg -i cuda-keyring_1.0-1_all.deb
+
+RUN rm /etc/apt/sources.list.d/cuda.list
+#RUN rm /etc/apt/sources.list.d/nvidia-ml.list
+RUN apt-key del 7fa2af80
+RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
+RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64/7fa2af80.pub
+
 # setup timezone
 RUN echo 'Etc/UTC' > /etc/timezone && \
     ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
@@ -76,6 +87,7 @@ RUN pip install pandas
 RUN pip install seaborn
 RUN pip install tqdm
 RUN pip install requests
+RUN pip install ipython
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Seoul

@@ -39,18 +39,21 @@ class WorkingMemory(object):
             self.memory[subject] = {}
         self.memory[subject][property] = object
 
-    def get(self, subject):
+    def get_properties(self, subject):
         if subject not in self.memory:
             return None
         else:
             return self.memory[subject]
 
-    def get(self, subject, property):
+    def get_object(self, subject, property):
         if subject not in self.memory:
             return None
         if property not in self.memory[subject]:
             return None
         return self.memory[subject][property]
+
+    def get_subject_ids(self):
+        return self.memory.keys()
 
     def forget_chunk(self, cue):
         to_be_removed = []
@@ -109,11 +112,11 @@ class LoomNode(Node):
             self.meal_callback,
             10)
 
-        self.subscription = self.create_subscription(
-            String,
-            '/aai4r/hhobjects',
-            self.hhobjects_callback,
-            10)
+        # self.subscription = self.create_subscription(
+        #     String,
+        #     '/aai4r/hhobjects',
+        #     self.hhobjects_callback,
+        #     10)
 
         self.subscription = self.create_subscription(
             RobotImageInfo,
@@ -141,6 +144,20 @@ class LoomNode(Node):
         self.create_timer(1.0/self.fps, self.video_recording_callback)
 
 
+    def timer_callback(self):
+        with self.timeline_lock:
+            wms = self.wms
+            self.timeline.add(self.wms)
+            self.wms = {}
+            with self.agents_lock:
+                for id in self.agents:
+                    self.wms[id] = WorkingMemory()
+                    self.wms_locks[id] = threading.Lock()
+        if len(wms) > 0:
+            msg = self.generate_situation_msg(wms)
+            self.publisher_.publish(msg)
+
+
     def add_agent(self, agent_id):
         if agent_id not in self.agents:
             self.agents.append(agent_id)
@@ -160,10 +177,16 @@ class LoomNode(Node):
 
     def detrack_callback(self, msg):
         msg_data = json.loads(msg.data)
-        with self.wm_lock:
+        # get a world model for the current agent
+        agent_id = msg_data['agent_id']
+        wm, lock = self.get_wm(agent_id)
+        if wm is None or lock is None:
+            print('no wm for agent {}'.format(agent_id))
+            return
+        with lock:
             for track in msg_data['tracks']:
-                self.wm.put(track['track_id'], 'roi', track['pos'])
-                self.wm.put(track['track_id'], 'score', track['score'])
+                wm.put(track['track_id'], 'roi', track['pos'])
+                wm.put(track['track_id'], 'score', track['score'])
 
 
     def facial_callback(self, msg):
@@ -180,11 +203,17 @@ class LoomNode(Node):
             if len(msg_data['facial']) > 0:
                 for face in msg_data['facial']:
                     wm.put('robot', 'face_detected', 'yes')
-                    track_id = self.predict_track_id(face['box'])
+                    track_id = self.predict_track_id(wm, face['face_bbox'])
                     if track_id is None:
                         continue
-                    wm.put(track_id, 'mask', face['mask'])
-                    wm.put(track_id, 'face_roi', face['box'])
+                    wm.put(track_id, 'gender', face['gender'][0])
+                    wm.put(track_id, 'age', (int)(face['age']))
+                    wm.put(track_id, 'mask', face['mask'][0])
+                    wm.put(track_id, 'hair_style', face['hair_style'])
+                    wm.put(track_id, 'hair_color', face['hair_color'])
+                    wm.put(track_id, 'hair_length', face['hair_length'])
+                    wm.put(track_id, 'nationality', face['nationality'])
+                    wm.put(track_id, 'face_roi', face['face_bbox'])
             else:
                 wm.put('robot', 'face_detected', 'no')
 
@@ -211,17 +240,17 @@ class LoomNode(Node):
                     wm.put(obj_id, 'amount', object['amount'])
 
 
-    def hhobjects_callback(self, msg):
-        msg_data = json.loads(msg.data)
-        with self.wm_lock:
-            for object in msg_data['hhobjects']:
-                # object = [(100,100,200,200), 0.787, 'cup']]
-                track_id = self.predict_track_id(object[0])
-                if track_id is None:
-                    continue
-                if object[2] == 'cup':
-                    self.wm.put(track_id, 'cup_roi', object[0])
-                    self.wm.put(track_id, 'has_cup', True)
+    # def hhobjects_callback(self, msg):
+    #     msg_data = json.loads(msg.data)
+    #     with self.wm_lock:
+    #         for object in msg_data['hhobjects']:
+    #             # object = [(100,100,200,200), 0.787, 'cup']]
+    #             track_id = self.predict_track_id(object[0])
+    #             if track_id is None:
+    #                 continue
+    #             if object[2] == 'cup':
+    #                 self.wm.put(track_id, 'cup_roi', object[0])
+    #                 self.wm.put(track_id, 'has_cup', True)
 
 
     def image_info_callback(self, msg):
@@ -297,16 +326,20 @@ class LoomNode(Node):
         return containment
 
 
-    def predict_track_id(self, face_roi):
-        return '12345'
-        # for key in self.wm.memory.keys():
-        #     track = self.wm.memory[key]
-        #     track_box = self.get_box(track)
-        #     if track_box is None:
-        #         return None
-        #     if self.calc_iou(track_box, face_roi) > 0.7:
-        #         self.get_logger().debug("IOU: %f" % self.calc_iou(track_box, face_roi))
-        #         return key
+    def predict_track_id(self, wm, face_roi):
+        #return '12345'
+        subjects = wm.get_subject_ids()
+        for key in subjects:
+            track = wm.get_properties(key)
+            if track is None:
+                continue
+            track_box = self.get_box(track)
+            if track_box is None:
+                continue
+            if self.calc_iou(track_box, face_roi) > 0.7:
+                self.get_logger().debug("IOU: %f" % self.calc_iou(track_box, face_roi))
+                return key
+
 
     def generate_situation_msg(self, wms):
         situations = []
@@ -325,6 +358,7 @@ class LoomNode(Node):
                 'personal_context': [],
                 'meal_context': []      # [{'category':'food', 'name':'pasta', 'amount':0.2}, ...]
             }
+            personal_attributes = ['mask', 'expression', 'gender', 'age', 'hair_style', 'hair_color', 'hair_length', 'nationality', 'skin_color']
             for key in wm.memory.keys():
                 track = wm.memory[key]
                 if key == 'robot':
@@ -338,10 +372,13 @@ class LoomNode(Node):
                         situation['meal_context'].append(context)
                     else:
                         context['id'] = key
-                        if 'mask' in track:
-                            context['mask'] = 1 if track['mask'] is True else 2
-                        if 'has_cup' in track:
-                            context['has_cup'] = 1 if track['has_cup'] is True else 2                    
+                        for attr in personal_attributes:
+                            if attr in track:
+                                context[attr] = track[attr]
+                        # if 'mask' in track:
+                        #     context['mask'] = 1 if track['mask'] is 1 else 2
+                        # if 'has_cup' in track:
+                        #     context['has_cup'] = 1 if track['has_cup'] is True else 2                    
                         situation['personal_context'].append(context)
             
             situations.append(situation)
@@ -387,20 +424,6 @@ class LoomNode(Node):
     def release_video_writer(self):
         if self.video_writer is not None:
             self.video_writer.release()
-
-
-    def timer_callback(self):
-        with self.timeline_lock:
-            wms = self.wms
-            self.timeline.add(self.wms)
-            self.wms = {}
-            with self.agents_lock:
-                for id in self.agents:
-                    self.wms[id] = WorkingMemory()
-                    self.wms_locks[id] = threading.Lock()
-        if len(wms) > 0:
-            msg = self.generate_situation_msg(wms)
-            self.publisher_.publish(msg)
 
 
 def main(args=None):
