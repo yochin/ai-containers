@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.0-devel-ubuntu20.04 as torch_base
+FROM nvidia/cuda:11.1.1-runtime-ubuntu20.04 as torch_base
 # ubuntu version 20.04
 
 #RUN apt-get update && apt-get upgrade
