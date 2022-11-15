@@ -206,6 +206,7 @@ class LoomNode(Node):
                     track_id = self.predict_track_id(wm, face['face_bbox'])
                     if track_id is None:
                         continue
+                    wm.put(track_id, 'face_roi', face['face_bbox'])
                     wm.put(track_id, 'gender', face['gender'][0])
                     wm.put(track_id, 'age', (int)(face['age']))
                     wm.put(track_id, 'mask', face['mask'][0])
@@ -214,6 +215,7 @@ class LoomNode(Node):
                     wm.put(track_id, 'hair_length', face['hair_length'])
                     wm.put(track_id, 'nationality', face['nationality'])
                     wm.put(track_id, 'face_roi', face['face_bbox'])
+                    wm.put(track_id, 'lip_color', face['lip_color'])
             else:
                 wm.put('robot', 'face_detected', 'no')
 
@@ -270,7 +272,6 @@ class LoomNode(Node):
             wm.put('robot', 'distance', msg.distance)
             wm.put('robot', 'zone', msg.zone)
 
-        '''
         np_arr = np.frombuffer(msg.data, np.uint8)
         im = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
@@ -278,23 +279,26 @@ class LoomNode(Node):
         self.image_q.put(im)
 
         if self.vizualize_flag:
-            results = []
-            for key in self.wm.memory.keys():
-                mem_item = self.wm.memory[key]
-                if 'roi' in mem_item:
-                    results.append(ObjectResult(
-                        key, str(key), 0.9, mem_item['roi']))
-                if 'face_roi' in mem_item:
-                    results.append(ObjectResult(
-                        key, 'face', 0.9, mem_item['face_roi']))
-                if 'cup_roi' in mem_item:
-                    results.append(ObjectResult(
-                        key, 'cup', 0.9, mem_item['cup_roi']))
-
-            imp = draw_labeled_boxes(im, results)
+            with lock:
+                results = []
+                for key in wm.memory.keys():
+                    mem_item = wm.memory[key]
+                    box = None
+                    gender = ''
+                    age = ''
+                    mask = ''
+                    if 'roi' in mem_item:
+                        box = mem_item['roi']
+                    if 'age' in mem_item:
+                        age = int(mem_item['age'])
+                    if 'gender' in mem_item:
+                        gender = 'M' if mem_item['gender'] == 1 else 'F'
+                    if 'mask' in mem_item:
+                       mask = 'NO_MASK' if mem_item['mask'] == 0 else 'MASK_ON'
+                    if box is not None and gender != '' and age != '' and mask != '':
+                        results.append(ObjectResult(key, '{}/{}/{}'.format(gender, age, mask), 0.9, box))
+                imp = draw_labeled_boxes(im, results)
             self.publish_img(imp)
-        '''
-
 
     def get_uuid(self):
         return str(uuid.uuid4())
@@ -358,7 +362,7 @@ class LoomNode(Node):
                 'personal_context': [],
                 'meal_context': []      # [{'category':'food', 'name':'pasta', 'amount':0.2}, ...]
             }
-            personal_attributes = ['mask', 'expression', 'gender', 'age', 'hair_style', 'hair_color', 'hair_length', 'nationality', 'skin_color']
+            personal_attributes = ['face_roi', 'mask', 'expression', 'gender', 'age', 'hair_style', 'hair_color', 'hair_length', 'nationality', 'skin_color', 'lip_color']
             for key in wm.memory.keys():
                 track = wm.memory[key]
                 if key == 'robot':

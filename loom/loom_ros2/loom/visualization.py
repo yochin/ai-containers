@@ -37,8 +37,8 @@ class ObjectResult:
         self.box = box
     
     def __repr__(self):
-        return '{0} ({1}%)'.format(self.label, int(100 * self.score))
-
+        #return '{0} ({1}%)'.format(self.label, int(100 * self.score))
+        return '{0}'.format(self.label)
 
 def draw_labeled_boxes(image_np, results, min_score=.4):
     """
@@ -61,7 +61,7 @@ def draw_labeled_boxes(image_np, results, min_score=.4):
     return image_np_copy
 
 
-def get_suitable_font_for_text(text, img_width, font_name, img_fraction=0.12):
+def get_suitable_font_for_text(text, img_width, font_name, img_fraction=0.2):
     """
     Calculates a suitable font for the image given the text and fraction.
     :param text: text that will be drawn
