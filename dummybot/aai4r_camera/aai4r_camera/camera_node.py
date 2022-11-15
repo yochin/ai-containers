@@ -60,7 +60,7 @@ class CameraNode(Node):
     def publish(self, frame):
         msg = RobotImageInfo()
         msg.stamp = self.get_clock().now().to_msg()
-        msg.agent_id = self.agents[self.count]
+        msg.agent_id = self.agents[0]
         msg.format = 'jpg'
         msg.hash = ''
         msg.seq_id = 0

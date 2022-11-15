@@ -85,7 +85,6 @@ RUN apt-get update && apt-get install -y tzdata
 
 RUN mkdir /aai4r
 WORKDIR /aai4r
-RUN git clone https://oauth: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@github.com/zebehn/aai4r-facial.git
 RUN export PYTHONPATH=$PYTHONPATH:/aai4r/aai4r-facial
 
 WORKDIR /aai4r/aai4r-facial

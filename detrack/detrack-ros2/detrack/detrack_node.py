@@ -18,7 +18,7 @@ class DetrackNode(Node):
     def __init__(self):
         super().__init__('detrack_node')
 
-        self.get_logger().info("detrack node initialization begin...")
+        self.get_logger().info("detrack_node initialization started!")
 
         self.trackers = {}
 
@@ -35,7 +35,7 @@ class DetrackNode(Node):
 
         self.publisher_ = self.create_publisher(String, '/aai4r/detrack', 1)
 
-        self.get_logger().info("   a publisher created for /aai4r/detrack...")
+        self.get_logger().info("  publisher registered to /aai4r/detrack")
 
         self.monitor_publisher = self.create_publisher(Image, '/aai4r/detrack/monitor', 1)
         self.cv_bridge = CvBridge()
@@ -49,6 +49,7 @@ class DetrackNode(Node):
 
 
     def callback(self, msg):
+        self.get_logger().info("detrack_node: an image received.")
         stamp = msg.stamp
         now = self.get_clock().now().to_msg()
         nano_diff = stamp.nanosec - now.nanosec
@@ -64,6 +65,8 @@ class DetrackNode(Node):
 
         tracks, detections, frame = tracker.process_frame(im)
 
+        self.get_logger().info("detrack_node: tracks processed.")
+
         trks = []
         for trk in tracks:
             trks.append({'track_id':trk.id, 'pos':list(trk.box), 'score':trk.score})
@@ -75,8 +78,13 @@ class DetrackNode(Node):
 
         msg = String()
         msg.data = json.dumps({"timestamp":(stamp.sec,stamp.nanosec), "agent_id":agent_id, "tracks": trks})
-        #self.get_logger().info('track: %s' % msg.data)
+
+        self.get_logger().info('detrack_node: track: %s' % msg.data)
+
         self.publisher_.publish(msg)
+
+        self.get_logger().info('detrack_node: done.\n\n')
+
 
     def publish_img(self, img):
         self.monitor_publisher.publish(self.cv_bridge.cv2_to_imgmsg(img, "bgr8"))
