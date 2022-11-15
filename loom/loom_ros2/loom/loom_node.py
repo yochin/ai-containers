@@ -12,6 +12,7 @@ from std_msgs.msg import String
 from aai4r_edge_interfaces.msg import RobotImageInfo
 
 from sensor_msgs.msg import Image
+from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridge
 
 import threading
@@ -130,7 +131,7 @@ class LoomNode(Node):
 
         self.vizualize_flag = True
         self.monitor_publisher = self.create_publisher(
-            Image, '/aai4r/loom/monitor', 1)
+            CompressedImage, '/aai4r/loom/monitor', 1)
         self.cv_bridge = CvBridge()
 
         self.create_timer(0.5, self.timer_callback)
@@ -171,8 +172,15 @@ class LoomNode(Node):
 
 
     def publish_img(self, img):
-        self.monitor_publisher.publish(
-            self.cv_bridge.cv2_to_imgmsg(img, "bgr8"))
+        #### Create CompressedIamge ####
+        msg = CompressedImage()
+        #msg.header.stamp = rospy.Time.now()
+        msg.format = "jpeg"
+        msg.data = np.array(cv2.imencode('.jpg', img)[1]).tostring()
+        # Publish new image
+        self.monitor_publisher.publish(msg)
+        #self.monitor_publisher.publish(
+        #    self.cv_bridge.cv2_to_imgmsg(img, "bgr8"))
 
 
     def detrack_callback(self, msg):
