@@ -18,6 +18,8 @@ class DetrackNode(Node):
     def __init__(self):
         super().__init__('detrack_node')
 
+        self.get_logger().info("detrack node initialization begin...")
+
         self.trackers = {}
 
         self.subscription = self.create_subscription(
@@ -27,12 +29,18 @@ class DetrackNode(Node):
             1)
         self.subscription  # prevent unused variable warning
 
+        self.get_logger().info("   subscribed to /camera/robot_image_info...")
+
         self.show_image = True
 
         self.publisher_ = self.create_publisher(String, '/aai4r/detrack', 1)
 
+        self.get_logger().info("   a publisher created for /aai4r/detrack...")
+
         self.monitor_publisher = self.create_publisher(Image, '/aai4r/detrack/monitor', 1)
         self.cv_bridge = CvBridge()
+
+        self.get_logger().info("detrack node initialization completed.")
 
 
     def add_agent(self, agent_id):
