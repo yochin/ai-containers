@@ -62,6 +62,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN rosdep init && \
   rosdep update --rosdistro $ROS_DISTRO
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-foxy-image-transport-plugins
+
 ############################### INTELLIGENCE MODULE
 RUN apt-get update && apt-get install -y python3-pip
 RUN apt-get update && apt-get install -y python3-opencv
