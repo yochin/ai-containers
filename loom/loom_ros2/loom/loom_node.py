@@ -131,7 +131,7 @@ class LoomNode(Node):
 
         self.vizualize_flag = True
         self.monitor_publisher = self.create_publisher(
-            CompressedImage, '/aai4r/loom/monitor', 1)
+            CompressedImage, '/aai4r/loom/monitor/compressed', 1)
         self.cv_bridge = CvBridge()
 
         self.create_timer(0.5, self.timer_callback)
@@ -269,6 +269,7 @@ class LoomNode(Node):
         #nano_diff = stamp.nanosec - now.nanosec
         # if abs(nano_diff) > 30000000:
         #    return
+        self.get_logger().info('robot_image_info received!')
         self.add_agent(msg.agent_id)
         wm, lock = self.get_wm(msg.agent_id)
 
@@ -306,6 +307,7 @@ class LoomNode(Node):
                     if box is not None and gender != '' and age != '' and mask != '':
                         results.append(ObjectResult(key, '{}/{}/{}'.format(gender, age, mask), 0.9, box))
                 imp = draw_labeled_boxes(im, results)
+            self.get_logger().info('monitor image published!')
             self.publish_img(imp)
 
     def get_uuid(self):
