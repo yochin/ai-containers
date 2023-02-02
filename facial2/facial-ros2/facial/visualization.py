@@ -118,4 +118,3 @@ def draw_bounding_box_on_image(image, box, color, box_label):
     # right below the upper-left horizontal line of the bounding box
     text_position = (left + line_width, top + line_width)
     draw.text(text_position, box_label, fill=TEXT_COLOR, font=font)
-

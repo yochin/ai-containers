@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.4.3-cudnn8-devel-ubuntu20.04 as torch_base
+FROM nvidia/cuda:11.0-devel-ubuntu20.04 as torch_base
 # ubuntu version 20.04
 
 #RUN apt-get update && apt-get upgrade
@@ -85,16 +85,13 @@ RUN apt-get update && apt-get install -y tzdata
 
 RUN mkdir /aai4r
 WORKDIR /aai4r
-RUN git clone https://oauth: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@github.com/zebehn/aai4r-facial.git
+RUN git clone https://oauth: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@github.com/zebehn/aai4r-facial.git
 RUN export PYTHONPATH=$PYTHONPATH:/aai4r/aai4r-facial
 
 WORKDIR /aai4r/aai4r-facial
 RUN pip install -r /aai4r/aai4r-facial/requirements.txt
 RUN pip uninstall torch -y
 RUN pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
-RUN pip3 install Pillow
-RUN apt-get update && apt-get install -y ttf-ubuntu-font-family
-RUN apt-get update && apt-get install -y x264
 
 COPY ./aai4r_edge_interfaces/ /aai4r/aai4r_edge_interfaces/
 COPY ./facial-ros2 /aai4r/facial-ros2/
