@@ -102,7 +102,7 @@ RUN pip install pycocotools
 RUN mkdir /aai4r
 
 #RUN alias python=python3
-#RUN export CUDA_HOME=/usr/local/cuda
+RUN export CUDA_HOME=/usr/local/cuda
 
 WORKDIR /aai4r
 RUN git clone https://github.com/aai4r/aai4r-TableServiceDetection
