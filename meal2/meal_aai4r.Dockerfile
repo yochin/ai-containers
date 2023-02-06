@@ -76,7 +76,8 @@ RUN rosdep init && \
 
 ############################### TORCH
 RUN apt-get update && apt-get install -y python3-pip
-RUN pip3 install torch==1.8.1+cu111 torchvision==0.9.1+cu111 torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip3 install torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+#RUN pip3 install torch==1.8.1+cu111 torchvision==0.9.1+cu111 torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
 #RUN pip install torch==1.12.1+cu116 torchvision==0.13.1+cu116 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu116
 
 ############################### INTELLIGENCE MODULE
@@ -84,34 +85,22 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Seoul
 RUN apt-get update && apt-get install -y tzdata
 
-RUN pip install pretrainedmodels
-RUN pip install numpy
-RUN pip install imageio
-RUN pip install easydict
-
-RUN apt-get update && apt-get install -y python3-opencv
-RUN pip install opencv-python
-
-RUN pip install imutils
-RUN sudo apt-get update
-RUN sudo apt-get install fonts-nanum
-
+############################### Deformable DETR in INTELLI MODULE
 RUN pip install scipy
 RUN pip install pycocotools
+RUN pip install tqdm
+RUN pip install cython
 
 RUN mkdir /aai4r
-
-#RUN alias python=python3
-RUN export CUDA_HOME=/usr/local/cuda
-
 WORKDIR /aai4r
 RUN git clone https://github.com/aai4r/aai4r-TableServiceDetection
 
-RUN export PYTHONPATH=$PYTHONPATH:/aai4r/aai4r-TableServiceDetection
+#RUN export PYTHONPATH=$PYTHONPATH:/aai4r/aai4r-TableServiceDetection
 
 WORKDIR /aai4r/aai4r-TableServiceDetection/MultiStreamDeformableDETR/models/ops
-RUN python3 -c "import torch; print('CUDA Available?? = {}'.format(torch.cuda.is_available()))"
-RUN python3 setup.py build install
+RUN sh ./make.sh
+#RUN python3 -c "import torch; print('CUDA Available?? = {}'.format(torch.cuda.is_available()))"
+#RUN python3 setup.py build install
 
 COPY ./gdrivedl.py /aai4r/aai4r-TableServiceDetection
 COPY ./download_models.sh /aai4r/aai4r-TableServiceDetection
