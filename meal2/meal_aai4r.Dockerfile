@@ -76,7 +76,8 @@ RUN rosdep init && \
 
 ############################### TORCH
 RUN apt-get update && apt-get install -y python3-pip
-RUN pip3 install torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+#RUN pip3 install torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip3 install torch==1.7.1+cu110 torchvision==0.8.2+cu110 -f https://download.pytorch.org/whl/torch_stable.html
 #RUN pip3 install torch==1.8.1+cu114 torchvision==0.9.1+cu114 torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
 #RUN pip install torch==1.12.1+cu116 torchvision==0.13.1+cu116 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu116
 
