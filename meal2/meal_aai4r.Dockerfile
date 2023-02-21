@@ -121,7 +121,7 @@ WORKDIR /aai4r
 RUN sudo rm -rf install build log
 
 COPY ./run_colcon.sh /aai4r
-#RUN /aai4r/run_colcon.sh
+RUN /aai4r/run_colcon.sh
 
 COPY ./run_meal.sh /aai4r
 COPY ./ros_entrypoint.sh /aai4r
