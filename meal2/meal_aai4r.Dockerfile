@@ -90,6 +90,7 @@ RUN pip install scipy
 RUN pip install pycocotools
 RUN pip install tqdm
 RUN pip install cython
+RUN pip install imutils
 
 RUN mkdir /aai4r
 
@@ -101,19 +102,14 @@ RUN export PYTHONPATH=$PYTHONPATH:/aai4r/aai4r-TableServiceDetection
 WORKDIR /aai4r
 RUN git clone https://github.com/aai4r/aai4r-TableServiceDetection
 
-WORKDIR /aai4r/aai4r-TableServiceDetection/MultiStreamDeformableDETR/models/ops
-#RUN python3 -c "import torch; print('torch.__version__:', torch.__version__); print('CUDA Available?? = {}'.format(torch.cuda.is_available()))"
-#RUN python3 setup.py build install
-
-#RUN sh ./make.sh
-
-
-
 COPY ./gdrivedl.py /aai4r/aai4r-TableServiceDetection
 COPY ./download_models.sh /aai4r/aai4r-TableServiceDetection
 
 WORKDIR /aai4r/aai4r-TableServiceDetection
 RUN /aai4r/aai4r-TableServiceDetection/download_models.sh
+
+#WORKDIR /aai4r/aai4r-TableServiceDetection/MultiStreamDeformableDETR/models/ops
+#RUN ./make.sh
 
 COPY ./aai4r_edge_interfaces/ /aai4r/aai4r_edge_interfaces/
 COPY ./meal-ros2 /aai4r/meal-ros2/
