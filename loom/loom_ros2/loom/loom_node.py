@@ -142,7 +142,7 @@ class LoomNode(Node):
         self.image_size = (640, 480)
         self.fps = 30.0
         self.time_video_recording_started = None
-        self.create_timer(1.0/self.fps, self.video_recording_callback)
+        #self.create_timer(1.0/self.fps, self.video_recording_callback)
 
 
     def timer_callback(self):
@@ -241,13 +241,18 @@ class LoomNode(Node):
         with lock:
             wm.forget_chunk('meal-context')
             for object in msg_data['meal']:
-                # object = [{'category': 'food', 'name': 'pasta', 'bbox': (100,100,200,200), 'amount': 0.9}]
+                # object = [{'category': 123, 'bbox': (100,100,200,200)}]
                 obj_id = self.get_uuid()
                 wm.put(obj_id, 'related-to', 'meal-context')
                 wm.put(obj_id, 'category', object['category'])
-                wm.put(obj_id, 'name', object['name'])
+                if 'name' in object:
+                    wm.put(obj_id, 'name', object['name'])
                 if 'amount' in object:
                     wm.put(obj_id, 'amount', object['amount'])
+            if 'meal_event' in msg_data:
+                obj_id = self.get_uuid()
+                wm.put(obj_id, 'related-to', 'meal-context')
+                wm.put(obj_id, 'meal_event', msg_data['meal_event'])
 
 
     # def hhobjects_callback(self, msg):
@@ -380,9 +385,12 @@ class LoomNode(Node):
                 else:
                     context = {}
                     if 'related-to' in track and track['related-to'] == 'meal-context':
-                        context['category'] = track['category']
-                        context['name'] = track['name']
-                        context['amount'] = track['amount']
+                        if 'category' in track:
+                            context['category'] = track['category']
+                        elif 'meal_event' in track:
+                            context['meal_event'] = track['meal_event']
+                        #context['name'] = track['name']
+                        #context['amount'] = track['amount']
                         situation['meal_context'].append(context)
                     else:
                         context['id'] = key
