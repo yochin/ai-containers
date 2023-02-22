@@ -388,7 +388,7 @@ class LoomNode(Node):
                         if 'category' in track:
                             context['category'] = track['category']
                         elif 'meal_event' in track:
-                            context['meal_event'] = track['meal_event']
+                            context['event'] = track['meal_event']
                         #context['name'] = track['name']
                         #context['amount'] = track['amount']
                         situation['meal_context'].append(context)
