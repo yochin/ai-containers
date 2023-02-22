@@ -1,1 +1,1 @@
-docker run --gpus all --name aai4r_meal --rm -it aai4r/meal
+docker run --gpus all --name aai4r_meal2 --rm -it aai4r/meal2
