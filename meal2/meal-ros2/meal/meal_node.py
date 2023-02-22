@@ -17,7 +17,9 @@ import cv2
 import imutils
 import time
 
+
 from table_service_alarm_interface import TableServiceAlarmRequestHandler
+
 
 class MealNode(Node):
     def __init__(self):
@@ -35,22 +37,11 @@ class MealNode(Node):
             1)
         self.subscription  # prevent unused variable warning
 
-        # subscribe to meal events
-        self.subscription = self.create_subscription(
-            String,
-            '/meal/event',
-            self.callback_mealevents,
-            1)
-        self.subscription  # prevent unused variable warning
-
         self.publisher_ = self.create_publisher(String, '/aai4r/meal', 10)
 
         self.visualize_flag = True
 
         self.monitor_publisher = self.create_publisher(Image, '/aai4r/meal/monitor', 1)
-
-        # meal_start_time is set to None if no meal is being served.
-        self.meal_start_time = None
 
         self.cv_bridge = CvBridge()
 
@@ -66,12 +57,6 @@ class MealNode(Node):
     def get_uuid(self):
         return str(uuid.uuid4())
 
-    def callback_mealevents(self, msg):
-        msg_data = json.loads(msg.data)
-        if msg_data['event'] == 0: # eating started
-            self.meal_start_time = time.time()
-        else:
-            self.meal_start_time = None
 
     def callback(self, msg):
         if self.meal_start_time is None:
@@ -88,6 +73,16 @@ class MealNode(Node):
 
         agent_id = msg.agent_id
 
+        t = time.time()
+        if msg.params is not None and msg.params != '':
+            d = json.loads(msg.params)
+            if d['meal_start_time'] is not None:
+                t = d['meal_start_time']
+            else:
+                print('meal_start_time is None')
+        else:
+            print('msg.params is None')
+
         #frame = imutils.resize(im, width=400)
 
         # 1. Perform detection and classification
@@ -96,8 +91,8 @@ class MealNode(Node):
         # - service_result is a list of four service possible time (food refill, trash collection, serving dessert, lost item)
         # - ex) result = [0.7, 0.1, 0.1, 0.2]
         detection_results, service_results, im2show = \
-            self.meal_detector.process_inference_request(frame, time() - self.meal_start_time)
-        
+            self.meal_detector.process_inference_request(frame, time.time() - t)
+
         # meal context for an agent(robot)
         msg_data = {"agent_id": agent_id, "timestamp":(stamp.sec,stamp.nanosec), "meal": [], 'meal_event': ''}
 
@@ -107,6 +102,7 @@ class MealNode(Node):
             meal_context['bbox'] = [result[0],result[1],result[2],result[3]]
             msg_data['meal'].append(meal_context)        
 
+        # get the most possible meal event
         msg_data['meal_event'] = service_results.index(max(service_results))
 
         # publish message

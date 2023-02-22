@@ -96,15 +96,16 @@ RUN mkdir /aai4r
 #RUN alias python=python3
 #RUN export CUDA_HOME=/usr/local/cuda
 
+RUN export PYTHONPATH=$PYTHONPATH:/aai4r/aai4r-TableServiceDetection
+
 WORKDIR /aai4r
 RUN git clone https://github.com/aai4r/aai4r-TableServiceDetection
-
-#RUN export PYTHONPATH=$PYTHONPATH:/aai4r/aai4r-TableServiceDetection
 
 WORKDIR /aai4r/aai4r-TableServiceDetection/MultiStreamDeformableDETR/models/ops
 #RUN python3 -c "import torch; print('torch.__version__:', torch.__version__); print('CUDA Available?? = {}'.format(torch.cuda.is_available()))"
 #RUN python3 setup.py build install
-RUN sh ./make.sh
+
+#RUN sh ./make.sh
 
 
 
