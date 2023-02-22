@@ -9,3 +9,4 @@ uint16 width		# 480
 float32 distance	# Meter
 uint8 zone		    # 1.Entrance 2.Lobby 3.table
 uint8[] data		# Compressed image buffer
+string params       # Additional Parameters in JSON
