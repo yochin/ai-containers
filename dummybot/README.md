@@ -22,10 +22,16 @@ To create a docker container:
 dockerbuild.sh
 ```
 
-To create and run a ``dummybot`` container:
+To run a ``dummybot`` container:
 
 ```
 run_container.sh
+```
+
+To check if the image is published:
+
+```
+run_container_showimg.sh
 ```
 
 ## ROS2 Interface
