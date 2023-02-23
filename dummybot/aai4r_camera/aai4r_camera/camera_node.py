@@ -5,6 +5,7 @@ import numpy as np
 import imutils
 import time
 import cv2
+import json
 
 import rclpy
 from rclpy.node import Node
@@ -31,8 +32,10 @@ class CameraNode(Node):
 
         self.create_timer(0.02, self.perform)
 
+        self.img = cv2.imread('/aai4r/example.jpg')
+
         self.count = 0
-        self.agents = ['robot01', 'robot02', 'robot03']
+        self.agents = ['robot01']
 
     def show_img(self, frame):
         if self.show:
@@ -42,7 +45,8 @@ class CameraNode(Node):
 
 
     def perform(self):
-        frame = self.fvs.read()
+        #frame = self.fvs.read()
+        frame = self.img
 
         self.publish(frame)
         self.publish_img(frame)
@@ -69,6 +73,7 @@ class CameraNode(Node):
         msg.distance = 0.12
         msg.zone = 2
         msg.data = np.array(cv2.imencode('.jpg', frame)[1]).tostring()
+        msg.params = json.dumps({'meal_start_time': time.time()})
         self.publisher.publish(msg)
 
 

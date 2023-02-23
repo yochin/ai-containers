@@ -96,7 +96,9 @@ RUN sudo rm -rf install build log
 COPY ./run_colcon.sh /aai4r
 RUN /aai4r/run_colcon.sh
 
+COPY ./example.jpg /aai4r
 COPY ./run.sh /aai4r
+COPY ./showimg.sh /aai4r
 COPY ./ros_entrypoint.sh /aai4r
 
 ENTRYPOINT ["/aai4r/ros_entrypoint.sh"]
