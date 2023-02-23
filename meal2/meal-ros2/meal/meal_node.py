@@ -16,7 +16,7 @@ import os
 import cv2
 import imutils
 import time
-
+import PIL
 
 from table_service_alarm_interface import TableServiceAlarmRequestHandler
 
@@ -47,6 +47,7 @@ class MealNode(Node):
 
 
     def publish_img(self, img):
+        img = np.array(img) # convert to numpy array
         self.monitor_publisher.publish(self.cv_bridge.cv2_to_imgmsg(img, "bgr8"))
 
 
@@ -59,15 +60,12 @@ class MealNode(Node):
 
 
     def callback(self, msg):
-        if self.meal_start_time is None:
-            return
-            
         self.get_logger().info("meal_node callback!")
         stamp = msg.stamp
         now = self.get_clock().now().to_msg()
-        nano_diff = stamp.nanosec - now.nanosec
-        if abs(nano_diff) > 50000000:
-            return
+        nano_diff = now.nanosec - stamp.nanosec
+        #if abs(nano_diff) > 50000000:
+        #    return
         np_arr = np.frombuffer(msg.data, np.uint8)
         frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
@@ -80,10 +78,13 @@ class MealNode(Node):
                 t = d['meal_start_time']
             else:
                 print('meal_start_time is None')
+                return
         else:
             print('msg.params is None')
+            return
 
         #frame = imutils.resize(im, width=400)
+        frame = PIL.Image.fromarray(frame)
 
         # 1. Perform detection and classification
         # - detection_result is a list of [x1,y1,x2,y2,class_id]
@@ -91,16 +92,20 @@ class MealNode(Node):
         # - service_result is a list of four service possible time (food refill, trash collection, serving dessert, lost item)
         # - ex) result = [0.7, 0.1, 0.1, 0.2]
         detection_results, service_results, im2show = \
-            self.meal_detector.process_inference_request(frame, time.time() - t)
+            self.meal_detector.process_inference_request(frame, int(time.time() - t))
 
         # meal context for an agent(robot)
         msg_data = {"agent_id": agent_id, "timestamp":(stamp.sec,stamp.nanosec), "meal": [], 'meal_event': ''}
+
+        if detection_results is None or len(detection_results) == 0:
+            print("no detection results")
+            return
 
         for result in detection_results:
             meal_context = {}
             meal_context['category'] = result[4]
             meal_context['bbox'] = [result[0],result[1],result[2],result[3]]
-            msg_data['meal'].append(meal_context)        
+            msg_data['meal'].append(meal_context)     
 
         # get the most possible meal event
         msg_data['meal_event'] = service_results.index(max(service_results))
@@ -113,7 +118,7 @@ class MealNode(Node):
         self.publisher_.publish(pub_msg)
 
         if self.visualize_flag:
-            self.publish_img(self.visualize(vis_img, []))
+            self.publish_img(self.visualize(im2show, []))
 
 
 def main(args=None):
