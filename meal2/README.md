@@ -40,3 +40,20 @@ meal2 지능모듈의 컨테이너 실행!
 ```
 docker run --gpus all --name aai4r_meal2 --rm -it aai4r/meal2 /aai4r/run_meal.sh
 ```
+
+## 인터페이스
+
+### ```/camera/robot_image_info (RobotImageInfo)```
+
+- 이미지와 각종 부가 정보를 수신함
+
+### ```/meal/event (String)```
+
+- 식사 시작 이벤트를 수신함
+- 메시지는 JSON 형식으로 아래와 같이 ```meal_start_time``` 필드에 시간 정보를 포함해야 함
+
+```
+{'meal_start_time': '2023-02-24-10-10-54'}
+```
+
+- 식사 맥락 이해 기능은 이 이벤트를 받은 이후에만 동작함
