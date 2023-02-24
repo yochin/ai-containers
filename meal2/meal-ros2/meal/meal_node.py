@@ -17,6 +17,7 @@ import cv2
 import imutils
 import time
 import PIL
+import datetime
 
 from table_service_alarm_interface import TableServiceAlarmRequestHandler
 
@@ -34,6 +35,14 @@ class MealNode(Node):
             RobotImageInfo,
             '/camera/robot_image_info',
             self.callback,
+            1)
+        self.subscription  # prevent unused variable warning
+
+        self.meal_start_time = None
+        self.subscription = self.create_subscription(
+            String,
+            '/meal/event',
+            self.callback_meal_event,
             1)
         self.subscription  # prevent unused variable warning
 
@@ -59,6 +68,12 @@ class MealNode(Node):
         return str(uuid.uuid4())
 
 
+    def callback_meal_event(self, msg):
+        self.get_logger().info("meal_node callback_meal_event!")
+        msg_data = json.loads(msg.data)
+        self.meal_start_time = datetime.datetime.strptime(msg_data['meal_start_time'],"%Y-%m-%d-%H-%M-%S")
+
+
     def callback(self, msg):
         self.get_logger().info("meal_node callback!")
         stamp = msg.stamp
@@ -74,10 +89,13 @@ class MealNode(Node):
         t = time.time()
         if msg.params is not None and msg.params != '':
             d = json.loads(msg.params)
-            if d['meal_start_time'] is not None:
-                t = d['meal_start_time']
+            if d['meal_current_time'] is not None:
+                t = d['meal_current_time']
+                t = datetime.datetime.strptime(t, "%Y-%m-%d-%H-%M-%S")
+                meal_duration = (t - self.meal_start_time).total_seconds()
+                print('meal_duration: ', meal_duration)
             else:
-                print('meal_start_time is None')
+                print('meal_current_time is None')
                 return
         else:
             print('msg.params is None')
@@ -92,7 +110,7 @@ class MealNode(Node):
         # - service_result is a list of four service possible time (food refill, trash collection, serving dessert, lost item)
         # - ex) result = [0.7, 0.1, 0.1, 0.2]
         detection_results, service_results, im2show = \
-            self.meal_detector.process_inference_request(frame, int(time.time() - t))
+            self.meal_detector.process_inference_request(frame, int(meal_duration))
 
         # meal context for an agent(robot)
         msg_data = {"agent_id": agent_id, "timestamp":(stamp.sec,stamp.nanosec), "meal": [], 'meal_event': ''}
