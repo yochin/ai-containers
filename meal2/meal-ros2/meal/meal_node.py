@@ -71,7 +71,13 @@ class MealNode(Node):
     def callback_meal_event(self, msg):
         self.get_logger().info("meal_node callback_meal_event!")
         msg_data = json.loads(msg.data)
-        self.meal_start_time = datetime.datetime.strptime(msg_data['meal_start_time'],"%Y-%m-%d-%H-%M-%S")
+        if msg_data['meal_start_time'] is not None:
+            if msg_data['meal_start_time'] == '':
+                self.meal_start_time = datetime.datetime.now()
+            else:
+                self.meal_start_time = datetime.datetime.strptime(msg_data['meal_start_time'],"%Y-%m-%d-%H-%M-%S")
+        elif msg_data['meal_end_time'] is not None:
+            self.meal_start_time = None
 
 
     def callback(self, msg):
@@ -95,7 +101,9 @@ class MealNode(Node):
                 meal_duration = (t - self.meal_start_time).total_seconds()
                 print('meal_duration: ', meal_duration)
             else:
-                print('meal_current_time is None')
+                t = datetime.datetime.now()
+                meal_duration = (t - self.meal_start_time).total_seconds()
+                print('meal_duration: ', meal_duration)
                 return
         else:
             print('msg.params is None')
