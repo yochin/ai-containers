@@ -1,34 +1,22 @@
 # dummybot
 
-## Introduction
+본 모듈은 RobotImageInfo 메시지를 배포합니다.
 
-A mock robot container for transmitting a series of images captured from a webcam.
-
-## Folders and Files
-
-- ``aai4r_camera``: An implementation of a ROS2 node for publising images in ``/aai4r_edge_interfaces/RobotImageInfo.msg``
-- ``Dockerfile``: A dockerfile for creating a ``dummybot`` container image
-- ``dockerbuild.sh``: A shell script for creating a container image with the ``Dockerfile`` and tagging it properly
-- ``ros_entrypoint.sh``: An entrypoint shell script for the container
-- ``run_colcon.sh``: A shell script to build the ROS2 node inside the container
-- ``run_container.sh``: A shell script to create a container and execute
-- ``run.sh``: A shell script to run the ROS2 node inside the container
-
-## Instructions
-
-To create a docker container:
+1. 도커 이미지 생성
 
 ```
 dockerbuild.sh
 ```
 
-To run a ``dummybot`` container:
+2. 이미지 배포 기능 실행
+
+현재는 식탁 이미지 한 장을 반복하여 배포합니다.
 
 ```
 run_container.sh
 ```
 
-To check if the image is published:
+3. 메시지 배포 현황 확인
 
 ```
 run_container_showimg.sh
