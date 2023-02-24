@@ -83,12 +83,21 @@ RUN pip3 install imutils opencv-python
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Seoul
 RUN apt-get update && apt-get install -y tzdata
+RUN apt-get update && apt-get install -y unzip
 
 RUN mkdir /aai4r
 WORKDIR /aai4r
 
 COPY ./aai4r_edge_interfaces/ /aai4r/aai4r_edge_interfaces/
 COPY ./aai4r_camera/ /aai4r/aai4r_camera/
+
+COPY ./samples/ /aai4r/samples/
+WORKDIR /aai4r/samples
+RUN /aai4r/samples/download_samples.sh
+RUN unzip samples.zip
+RUN rm samples.zip
+RUN rm gdrivedl.py
+RUN rm download_samples.sh
 
 WORKDIR /aai4r
 RUN sudo rm -rf install build log
