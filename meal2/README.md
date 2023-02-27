@@ -6,6 +6,11 @@
 ./dockerbuild_meal.sh
 ```
 
+```meal_aai4r.Dockerfile```의 111, 112행의 코멘트를 없애고 빌드를 해서 성공하면 아래 2~4단계를 수행하지 않아도 됩니다.
+단, 이 경우 먼저 아래 링크의 2절에서 안내하는 방법으로 Docker의 daemon.json 파일을 수정해서 기본 런타임을 NVidia 런타임으로 설정해 주셔야 합니다.
+
+- [https://hanseokhyeon.tistory.com/entry/docker-runtimenvidia-default로-바꾸기-GPU-사용-default](https://hanseokhyeon.tistory.com/entry/docker-runtimenvidia-default로-바꾸기-GPU-사용-default)
+
 2. 식사맥락이해 지능모듈의 내부 연산자 컴파일 (자동으로 안되어서... 수작업으로 합니다.)
 
 ```
