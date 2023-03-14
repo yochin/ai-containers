@@ -91,15 +91,7 @@ RUN mkdir /aai4r
 WORKDIR /aai4r
 
 COPY ./aai4r_edge_interfaces/ /aai4r/aai4r_edge_interfaces/
-COPY ./aai4r_camera/ /aai4r/aai4r_camera/
-
-COPY ./samples/ /aai4r/samples/
-WORKDIR /aai4r/samples
-RUN /aai4r/samples/download_samples.sh
-RUN unzip samples.zip
-RUN rm samples.zip
-RUN rm gdrivedl.py
-RUN rm download_samples.sh
+COPY ./dummybot_ipcam/ /aai4r/dummybot_ipcam/
 
 WORKDIR /aai4r
 RUN sudo rm -rf install build log
@@ -110,7 +102,6 @@ RUN /aai4r/run_colcon.sh
 COPY ./example.jpg /aai4r
 COPY ./run.sh /aai4r
 COPY ./run_showimg.sh /aai4r
-COPY ./run_ipcam.sh /aai4r
 COPY ./ros_entrypoint.sh /aai4r
 
 ENTRYPOINT ["/aai4r/ros_entrypoint.sh"]
