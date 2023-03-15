@@ -136,7 +136,7 @@ class MealNode(Node):
         #self.get_logger().info(json.dumps(msg_data))
 
         if self.image_backup_flag:
-            file_name = datetime.now().strftime("%Y-%m-%dT%H-%M-%S.%f") + '.jpg'
+            file_name = datetime.now().strftime("%Y-%m-%dT%H-%M-%S.%f") + '_{}'.format(msg_data['meal_event']) + '.jpg'
             file_path = os.path.join("/aai4r/captures", file_name)
             frame.save(file_path)
 
