@@ -49,7 +49,8 @@ class MealNode(Node):
         self.publisher_ = self.create_publisher(String, '/aai4r/meal', 10)
 
         self.visualize_flag = True
-
+        self.image_backup_flag = True
+        
         self.monitor_publisher = self.create_publisher(Image, '/aai4r/meal/monitor', 1)
 
         self.cv_bridge = CvBridge()
@@ -134,6 +135,10 @@ class MealNode(Node):
         self.get_logger().info("meal event = {}".format(msg_data['meal_event']))
         #self.get_logger().info(json.dumps(msg_data))
 
+        if self.image_backup_flag:
+            file_name = datetime.now().strftime("%Y-%m-%dT%H-%M-%S.%f") + '.jpg'
+            file_path = os.path.join("/aai4r/captures", file_name)
+            frame.save(file_path)
 
         pub_msg = String()
         pub_msg.data = json.dumps(msg_data)
