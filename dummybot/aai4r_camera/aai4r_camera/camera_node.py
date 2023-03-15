@@ -76,7 +76,8 @@ class CameraNode(Node):
     def notify_meal_start_time(self):
         time_in_string, self.meal_start_time = get_time_of_file('/aai4r/samples/captured_2023-01-18-11-50-07-181543.jpg')
         msg = String()
-        msg.data = json.dumps({'meal_start_time': time_in_string})
+        #msg.data = json.dumps({'meal_start_time': time_in_string})
+        msg.data = json.dumps({'meal_start_time': ''})
         self.publisher_meal_event.publish(msg)
         print('published meal start time: {}'.format(time_in_string))
 

@@ -92,22 +92,16 @@ class MealNode(Node):
 
         agent_id = msg.agent_id
 
-        t = time.time()
-        if msg.params is not None and msg.params != '':
-            d = json.loads(msg.params)
-            if d['meal_current_time'] is not None:
-                t = d['meal_current_time']
-                t = datetime.datetime.strptime(t, "%Y-%m-%d-%H-%M-%S")
-                meal_duration = (t - self.meal_start_time).total_seconds()
-                print('meal_duration: ', meal_duration)
-            else:
-                t = datetime.datetime.now()
-                meal_duration = (t - self.meal_start_time).total_seconds()
-                print('meal_duration: ', meal_duration)
-                return
-        else:
-            print('msg.params is None')
+        if self.meal_start_time is None:
+            self.get_logger().info("meal start time is None")
             return
+
+        d = json.loads(msg.params)
+        t = datetime.datetime.now()
+        meal_duration = (t - self.meal_start_time).total_seconds()
+        self.get_logger().info('meal_start_time: {}'.format(self.meal_start_time))
+        self.get_logger().info('current time: {}'.format(t))
+        self.get_logger().info('meal_duration: {}'.format(meal_duration))
 
         #frame = imutils.resize(im, width=400)
         frame = PIL.Image.fromarray(frame)
@@ -137,7 +131,9 @@ class MealNode(Node):
         msg_data['meal_event'] = service_results.index(max(service_results))
 
         # publish message
-        self.get_logger().info(json.dumps(msg_data))
+        self.get_logger().info("meal event = {}".format(msg_data['meal_event']))
+        #self.get_logger().info(json.dumps(msg_data))
+
 
         pub_msg = String()
         pub_msg.data = json.dumps(msg_data)

@@ -21,7 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'meal_node = meal.meal_node:main',
-            'meal_model_download = meal.meal_model_download:main',
+            'meal_model_download = meal.meal_model_download:main'
         ],
     },
 )

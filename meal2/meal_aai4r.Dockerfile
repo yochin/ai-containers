@@ -108,11 +108,11 @@ COPY ./download_models.sh /aai4r/aai4r-TableServiceDetection
 WORKDIR /aai4r/aai4r-TableServiceDetection
 RUN /aai4r/aai4r-TableServiceDetection/download_models.sh
 
-#WORKDIR /aai4r/aai4r-TableServiceDetection/MultiStreamDeformableDETR/models/ops
-#RUN ./make.sh
+WORKDIR /aai4r/aai4r-TableServiceDetection/MultiStreamDeformableDETR/models/ops
+RUN ./make.sh
 
-COPY ./aai4r_edge_interfaces/ /aai4r/aai4r_edge_interfaces/
 COPY ./meal-ros2 /aai4r/meal-ros2/
+COPY ./aai4r_edge_interfaces/ /aai4r/aai4r_edge_interfaces/
 
 WORKDIR /aai4r
 RUN sudo rm -rf install build log

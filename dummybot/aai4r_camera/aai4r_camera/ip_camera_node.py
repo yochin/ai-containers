@@ -79,6 +79,8 @@ class CameraNode(Node):
             cv_im_bgr = cv_im[:, :, ::-1].copy()  # rgb to bgr
             '''
 
+            frame = np.array(frame)
+            frame = frame[:, :, ::-1].copy()  # rgb to bgr
             self.publish(frame, -1)
             self.publish_img(frame)
             self.count = (self.count + 1) % len(self.agents)
@@ -104,7 +106,7 @@ class CameraNode(Node):
         msg.distance = 0.12
         msg.zone = 2
         msg.data = np.array(cv2.imencode('.jpg', frame)[1]).tostring()
-        msg.params = json.dumps({'meal_current_time': meal_current_time})
+        #msg.params = json.dumps({'meal_current_time': meal_current_time})
         self.publisher.publish(msg)
 
 
