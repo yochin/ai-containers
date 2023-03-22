@@ -129,6 +129,7 @@ class MealNode(Node):
             msg_data['meal'].append(meal_context)     
 
         # get the most possible meal event
+        self.get_logger().info("service_results = {}".format(service_results))
         msg_data['meal_event'] = service_results.index(max(service_results))
 
         # publish message
