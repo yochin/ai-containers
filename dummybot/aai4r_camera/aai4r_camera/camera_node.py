@@ -65,7 +65,7 @@ class CameraNode(Node):
 
         self.show = False
 
-        self.create_timer(0.02, self.perform)
+        self.create_timer(1, self.perform)
 
         self.img = cv2.imread('/aai4r/example.jpg')
 
