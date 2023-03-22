@@ -100,6 +100,7 @@ RUN mkdir /aai4r
 #RUN export PYTHONPATH=$PYTHONPATH:/aai4r/aai4r-TableServiceDetection
 
 WORKDIR /aai4r
+RUN mkdir captures
 RUN git clone https://github.com/aai4r/aai4r-TableServiceDetection
 
 COPY ./gdrivedl.py /aai4r/aai4r-TableServiceDetection
