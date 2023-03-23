@@ -112,7 +112,10 @@ class MealNode(Node):
         # - ex) result = [(100,100,200,200,154), (200,300,200,300,12)]
         # - service_result is a list of four service possible time (food refill, trash collection, serving dessert, lost item)
         # - ex) result = [0.7, 0.1, 0.1, 0.2]
-        detection_results, service_results, im2show = \
+        # - repr_service_index and repr_service_name
+        # : (0) no_service, (1) refill_food, (2) found_trash, (3) provide_dessert, (4) found_lost
+        # - ex) result = 0, no_service
+        detection_results, service_results, repr_service_index, repr_service_name, im2show = \
             self.meal_detector.process_inference_request(frame, int(meal_duration))
 
         # meal context for an agent(robot)
@@ -130,7 +133,8 @@ class MealNode(Node):
 
         # get the most possible meal event
         self.get_logger().info("service_results = {}".format(service_results))
-        msg_data['meal_event'] = service_results.index(max(service_results))
+
+        msg_data['meal_event'] = repr_service_index
 
         # publish message
         self.get_logger().info("meal event = {}".format(msg_data['meal_event']))
