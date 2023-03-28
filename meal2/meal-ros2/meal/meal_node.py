@@ -100,9 +100,9 @@ class MealNode(Node):
         d = json.loads(msg.params)
         t = datetime.datetime.now()
         meal_duration = (t - self.meal_start_time).total_seconds()
-        self.get_logger().info('meal_start_time: {}'.format(self.meal_start_time))
-        self.get_logger().info('current time: {}'.format(t))
-        self.get_logger().info('meal_duration: {}'.format(meal_duration))
+        # self.get_logger().info('meal_start_time: {}'.format(self.meal_start_time))
+        # self.get_logger().info('current time: {}'.format(t))
+        # self.get_logger().info('meal_duration: {}'.format(meal_duration))
 
         #frame = imutils.resize(im, width=400)
         frame = PIL.Image.fromarray(frame)
@@ -122,8 +122,14 @@ class MealNode(Node):
         msg_data = {"agent_id": agent_id, "timestamp":(stamp.sec,stamp.nanosec), "meal": [], 'meal_event': ''}
 
         if detection_results is None or len(detection_results) == 0:
-            print("no detection results")
+            # print("no detection results")
             return
+
+        # print time info when the result is available
+        self.get_logger().info('meal_start_time: {}'.format(self.meal_start_time))
+        self.get_logger().info('current time: {}'.format(t))
+        self.get_logger().info('meal_duration: {}'.format(meal_duration))
+
 
         for result in detection_results:
             meal_context = {}
