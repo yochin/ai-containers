@@ -73,6 +73,7 @@ class MealNode(Node):
         self.get_logger().info("meal_node callback_meal_event!")
         msg_data = json.loads(msg.data)
         if msg_data['meal_start_time'] is not None:
+            self.meal_detector.process_start_meal(0)
             if msg_data['meal_start_time'] == '':
                 self.meal_start_time = datetime.datetime.now()
             else:
