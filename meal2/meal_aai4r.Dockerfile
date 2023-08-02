@@ -97,7 +97,7 @@ RUN mkdir /aai4r
 #RUN alias python=python3
 #RUN export CUDA_HOME=/usr/local/cuda
 
-#RUN export PYTHONPATH=$PYTHONPATH:/aai4r/aai4r-TableServiceDetection
+RUN export PYTHONPATH=$PYTHONPATH:/aai4r/aai4r-TableServiceDetection
 
 WORKDIR /aai4r
 RUN mkdir captures
