@@ -29,6 +29,7 @@ class MealNode(Node):
         # Prepare a food detector
         model_path = '/aai4r/aai4r-TableServiceDetection'
         self.meal_detector = TableServiceAlarmRequestHandler(model_path)
+        self.cap_img_folder = '.'    # saving folder for captured images
 
         # subscribe to image inputs
         self.subscription = self.create_subscription(
@@ -78,6 +79,10 @@ class MealNode(Node):
                 self.meal_start_time = datetime.datetime.now()
             else:
                 self.meal_start_time = datetime.datetime.strptime(msg_data['meal_start_time'],"%Y-%m-%d-%H-%M-%S")
+            cap_cur_day = self.meal_start_time.strftime('%Y-%m-%d_%H-%M-%S')
+            self.cap_img_folder = os.path.join('./cap_images', cap_cur_day)
+            if not os.path.exists(self.cap_img_folder):
+                os.makedirs(self.cap_img_folder)
         elif msg_data['meal_end_time'] is not None:
             self.meal_start_time = None
 
@@ -107,6 +112,13 @@ class MealNode(Node):
 
         #frame = imutils.resize(im, width=400)
         frame = PIL.Image.fromarray(frame)
+
+        # save the current captured image
+        # t = datetime.now()
+        if t.hour >= 11 and t.hour <= 18:
+            cur_time = t.strftime('%Y-%m-%d-%H-%M-%S-%f')
+            strfilename = os.path.join(self.cap_img_folder, 'captured_%s.jpg' % cur_time) # jpeg only
+            frame.save(strfilename, 'JPEG')
 
         # 1. Perform detection and classification
         # - detection_result is a list of [x1,y1,x2,y2,class_id]
